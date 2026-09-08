@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv =require("dotenv");
 
 const connectDB =require("./config/db");
+const songRoutes = require("./routes/songRoutes");
 
 dotenv.config();
 
@@ -12,11 +13,14 @@ const app= express();
 app.use(cors());
 app.use(express.json());
 
+
 app.get("/",(req,res)=>{
      res.status(200).json({
          message:"music player  api is  running"
      });
 });
+
+app.use("/api/songs", songRoutes);
 
 const PORT = process.env.PORT||5000;
 
