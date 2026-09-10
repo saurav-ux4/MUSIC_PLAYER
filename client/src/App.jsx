@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import SongList from "./components/SongList";
 import "./App.css";
+import SongList from "./components/SongList";
+import MusicPlayer from "./components/MusicPlayer";
+
 
 
 function App() {
   const [songs, setSongs] = useState([]);
+   const [currentSong, setCurrentSong] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -19,6 +22,10 @@ function App() {
       })
       .then((data) => {
         setSongs(data);
+
+        if (data.length > 0) {
+          setCurrentSong(data[0]);
+        }
       })
       .catch(() => {
         setError(true);
@@ -27,6 +34,10 @@ function App() {
         setLoading(false);
       });
   }, []);
+
+  const handleSelectSong = (song) => {
+    setCurrentSong(song);
+  };
 
   if (loading) {
     return <h1>Loading songs...</h1>;
@@ -40,11 +51,31 @@ function App() {
     return <h1>No songs available.</h1>;
   }
 
+  const handleNext = () => {
+  const currentIndex = songs.findIndex(
+    (song) => song._id === currentSong?._id
+  );
+
+  if (currentIndex < songs.length - 1) {
+    setCurrentSong(songs[currentIndex + 1]);
+  }
+};
+
+const handlePrevious = () => {
+  const currentIndex = songs.findIndex(
+    (song) => song._id === currentSong?._id
+  );
+
+  if (currentIndex > 0) {
+    setCurrentSong(songs[currentIndex - 1]);
+  }
+};
+
   return (
     <div className="app">
       <h1>Music Player</h1>
-     <SongList songs={songs} />
-
+     <SongList songs={songs} onSelect={handleSelectSong}/>
+      <MusicPlayer song={currentSong}  onNext={handleNext}   onPrevious={handlePrevious}  />
     </div>
   );
 }

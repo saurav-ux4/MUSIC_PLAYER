@@ -9,7 +9,7 @@ function formatTime(seconds) {
     .padStart(2, "0")}`;
 }
 
-function MusicPlayer({ song }) {
+function MusicPlayer({ song,onNext , onPrevious }) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -54,7 +54,8 @@ const [duration, setDuration] = useState(0);
 
       <audio ref={audioRef} src={song.audioUrl}
                 onTimeUpdate={(event) => setCurrentTime(event.target.currentTime)}
-                onLoadedMetadata={(event) => setDuration(event.target.duration)} />
+                onLoadedMetadata={(event) => setDuration(event.target.duration)}
+                 onEnded={onNext} />
 
       <p>
          {formatTime(currentTime)}/ {formatTime(duration)}
@@ -69,9 +70,20 @@ const [duration, setDuration] = useState(0);
     audioRef.current.currentTime = event.target.value;
   }}
 />
+
+      <button onClick={onPrevious}>
+          Previous
+      </button>
+ 
       <button onClick={handlePlayPause}>
         {isPlaying ? "Pause" : "Play"}
       </button>
+
+      <button onClick={onNext}>
+         Next
+      </button>
+
+      
     </div>
   );
 }

@@ -1,8 +1,10 @@
-function SongCard({ song }) {
+function SongCard({ song, onSelect }) {
   return (
-    <div className="song-card">
-      <img src={song.coverImage} alt={song.title} width="100" />
+    <div className="song-card" onClick={() => onSelect(song)}>
+      <img src={song.coverImage} alt={song.title} />
+
       <h2>{song.title}</h2>
+
       <p>{song.duration} seconds</p>
     </div>
   );
