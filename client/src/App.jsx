@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SongCard from "./components/SongCard"
 
 
 function App() {
@@ -42,18 +43,9 @@ function App() {
     <div>
       <h1>Music Player</h1>
 
-      {songs.map((song) => (
-        <div key={song._id}>
-          <img
-            src={song.coverImage}
-            alt={song.title}
-            width="100"
-          />
+     {songs.map((song) => (
+        <SongCard key={song._id} song={song} />
 
-          <h2>{song.title}</h2>
-
-          <p>{song.duration} seconds</p>
-        </div>
       ))}
     </div>
   );
