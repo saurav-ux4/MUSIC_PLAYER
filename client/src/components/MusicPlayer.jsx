@@ -9,7 +9,7 @@ function formatTime(seconds) {
     .padStart(2, "0")}`;
 }
 
-function MusicPlayer({ song,onNext , onPrevious }) {
+function MusicPlayer({ song,onNext , onPrevious,onRandom }) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -82,6 +82,10 @@ const [duration, setDuration] = useState(0);
       <button onClick={onNext}>
          Next
       </button>
+
+      <button onClick={onRandom}>
+        Random
+     </button>
 
       
     </div>

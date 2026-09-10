@@ -71,11 +71,29 @@ const handlePrevious = () => {
   }
 };
 
+const handleRandom = () => {
+  if (songs.length <= 1) {
+    return;
+  }
+
+  const currentIndex = songs.findIndex(
+    (song) => song._id === currentSong?._id
+  );
+
+  let randomIndex;
+
+  do {
+    randomIndex = Math.floor(Math.random() * songs.length);
+  } while (randomIndex === currentIndex);
+
+  setCurrentSong(songs[randomIndex]);
+};
+
   return (
     <div className="app">
       <h1>Music Player</h1>
      <SongList songs={songs} onSelect={handleSelectSong}/>
-      <MusicPlayer song={currentSong}  onNext={handleNext}   onPrevious={handlePrevious}  />
+      <MusicPlayer song={currentSong}  onNext={handleNext}   onPrevious={handlePrevious}  onRandom={handleRandom} />
     </div>
   );
 }
