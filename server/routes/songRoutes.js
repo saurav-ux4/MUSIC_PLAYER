@@ -1,12 +1,13 @@
-const express = require("express");
+import express from "express";
+import upload from "../middleware/upload.js";
 
-const {
+import {
   getSongs,
   getSong,
   createSong,
   updateSong,
   deleteSong,
-} = require("../controllers/songController");
+} from "../controllers/songController.js";
 
 const router = express.Router();
 
@@ -14,10 +15,17 @@ router.get("/", getSongs);
 
 router.get("/:id", getSong);
 
-router.post("/", createSong);
+router.post(
+  "/",
+  upload.fields([
+    { name: "audio", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  createSong
+);
 
 router.put("/:id", updateSong);
 
 router.delete("/:id", deleteSong);
 
-module.exports = router;
+ export default router;

@@ -1,11 +1,14 @@
-const express =require("express");
-const cors = require("cors");
-const dotenv =require("dotenv");
 
-const connectDB =require("./config/db");
-const songRoutes = require("./routes/songRoutes");
+import express from "express";
+import cors from "cors";
 
-dotenv.config();
+
+import connectDB from "./config/db.js";
+import songRoutes from "./routes/songRoutes.js";
+
+
+
+
 
 const app= express();
 
