@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import SongCard from "./components/SongCard"
+import SongList from "./components/SongList";
 
 
 function App() {
@@ -42,11 +42,8 @@ function App() {
   return (
     <div>
       <h1>Music Player</h1>
+     <SongList songs={songs} />
 
-     {songs.map((song) => (
-        <SongCard key={song._id} song={song} />
-
-      ))}
     </div>
   );
 }
