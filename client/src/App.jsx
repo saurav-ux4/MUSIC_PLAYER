@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SongList from "./components/SongList";
+import "./App.css";
 
 
 function App() {
@@ -40,7 +41,7 @@ function App() {
   }
 
   return (
-    <div>
+    <div className="app">
       <h1>Music Player</h1>
      <SongList songs={songs} />
 

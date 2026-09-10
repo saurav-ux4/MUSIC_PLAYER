@@ -2,7 +2,7 @@ import SongCard from "./SongCard";
 
 function SongList({ songs }) {
   return (
-    <div>
+    <div className="song-list">
       {songs.map((song) => (
         <SongCard key={song._id} song={song} />
       ))}
