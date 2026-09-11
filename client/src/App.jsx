@@ -13,13 +13,17 @@ function App() {
 
   useEffect(() => {
     fetch("http://localhost:5000/api/songs")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch songs");
-        }
+        
+     .then(async (response) => {
+  const data = await response.json();
 
-        return response.json();
-      })
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to upload song");
+  }
+
+  return data;
+})
+
       .then((data) => {
         setSongs(data);
 
@@ -92,8 +96,103 @@ const handleRandom = () => {
   return (
     <div className="app">
       <h1>Music Player</h1>
-     <SongList songs={songs} onSelect={handleSelectSong}/>
-      <MusicPlayer song={currentSong}  onNext={handleNext}   onPrevious={handlePrevious}  onRandom={handleRandom} />
+      <input
+         type="file"
+         accept="audio/mpeg"
+         onChange={(event) => {
+                 const file = event.target.files[0];
+
+           if (!file) {
+            return;
+             }
+
+             const audio = new Audio();
+
+             audio.src = URL.createObjectURL(file);
+
+             audio.addEventListener("loadedmetadata", () => {
+             console.log("File:", file);
+console.log("Duration:", audio.duration);
+
+const formData = new FormData();
+
+formData.append("title", file.name);
+formData.append("audio", file);
+formData.append("duration", audio.duration);
+
+console.log(formData.get("title"));
+console.log(formData.get("audio"));
+console.log(formData.get("duration"));
+
+const title = file.name.replace(".mp3", "");
+
+fetch(
+  `https://itunes.apple.com/search?term=${encodeURIComponent(
+    title
+  )}&entity=song&limit=1`
+)
+  .then((response) => response.json())
+  .then((data) => {
+        const artworkUrl = data.results[0]?.artworkUrl100;
+
+          console.log("Artwork URL:", artworkUrl);
+
+           const finalCoverImage =
+  artworkUrl || "https://placehold.co/600x600?text=Music";
+
+formData.append("coverImage", finalCoverImage);
+
+console.log("Cover image:", formData.get("coverImage"));
+
+    fetch("http://localhost:5000/api/songs", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to upload song");
+        }
+
+        return response.json();
+      })
+      .then((song) => {
+        console.log("Song uploaded:", song);
+          setSongs((previousSongs) => [song, ...previousSongs]);
+          setCurrentSong(song);
+      })
+      .catch((error) => {
+        console.error("Upload failed:", error);
+      });
+  })
+  .catch((error) => {
+    console.error("Artwork search failed:", error);
+  });
+
+URL.revokeObjectURL(audio.src);
+          });
+            }}
+      />
+
+
+      
+       
+        {songs.length === 0 ? (
+        <h2>No songs available.</h2>
+      ) : (
+        <>
+          <SongList
+            songs={songs}
+            onSelect={handleSelectSong}
+          />
+
+          <MusicPlayer
+            song={currentSong}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onRandom={handleRandom}
+          />
+        </>
+      )}
     </div>
   );
 }

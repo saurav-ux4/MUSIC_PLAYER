@@ -15,14 +15,7 @@ router.get("/", getSongs);
 
 router.get("/:id", getSong);
 
-router.post(
-  "/",
-  upload.fields([
-    { name: "audio", maxCount: 1 },
-    { name: "cover", maxCount: 1 },
-  ]),
-  createSong
-);
+router.post("/", upload.single("audio"), createSong);
 
 router.put("/:id", updateSong);
 

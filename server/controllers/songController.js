@@ -40,8 +40,10 @@ const getSong =async(req,res)=>{
 //POST /api/songs
 const createSong = async (req, res) => {
   try {
-    const { title, duration } = req.body;
-    console.log("FILES:", req.files);//here
+    const { title, duration ,coverImage} = req.body;
+    
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
 
     if (!title || duration === undefined) {
       return res.status(400).json({
@@ -49,20 +51,20 @@ const createSong = async (req, res) => {
       });
     }
 
-     if (!req.files?.audio?.[0]) {
-      return res.status(400).json({
-        message: "MP3 file is required",
-      });
-    }
-
-     if (!req.files?.cover?.[0]) {
+    if (!coverImage) {
       return res.status(400).json({
         message: "Cover image is required",
       });
     }
 
-     const audioFile = req.files.audio[0];
-     const coverFile = req.files.cover[0];
+    if (!req.file) {
+  return res.status(400).json({
+    message: "MP3 file is required",
+  });
+}
+
+const audioFile = req.file;
+    
 
 
     const audioUpload = await new Promise((resolve, reject) => {
@@ -84,30 +86,12 @@ const createSong = async (req, res) => {
         .end(audioFile.buffer);
     });
 
-    const coverUpload = await new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            resource_type: "image",
-            folder: "music-player/covers",
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-                }
-          }
-        )
-        .end(coverFile.buffer);
-    });
-
-
+   
      const song = await Song.create({
       title,
       duration,
       audioUrl: audioUpload.secure_url,
-      coverImage: coverUpload.secure_url,
+      coverImage: req.body.coverImage ,
     });
 
     res.status(201).json(song);
