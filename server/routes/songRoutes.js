@@ -1,5 +1,6 @@
 import express from "express";
 import upload from "../middleware/upload.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 import {
   getSongs,
@@ -15,7 +16,7 @@ router.get("/", getSongs);
 
 router.get("/:id", getSong);
 
-router.post("/", upload.single("audio"), createSong);
+router.post("/", authMiddleware, upload.single("audio"), createSong);
 
 router.put("/:id", updateSong);
 

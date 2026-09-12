@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import SongList from "./components/SongList";
 import MusicPlayer from "./components/MusicPlayer";
+import GoogleLoginButton from "./components/GoogleLoginButton.jsx";
 
 function App() {
   const [songs, setSongs] = useState([]);
@@ -26,7 +27,14 @@ function App() {
         setSongs(data);
 
         if (data.length > 0) {
-          setCurrentSong(data[0]);
+
+           const sharedSongId = new URLSearchParams(window.location.search).get("song");
+
+           const sharedSong = data.find(
+           (song) => song._id === sharedSongId
+            );
+
+          setCurrentSong(sharedSong ||data[0]);
         }
       })
       .catch(() => {
@@ -141,10 +149,15 @@ function App() {
 
           console.log("Cover image:", formData.get("coverImage"));
 
-          fetch(`${import.meta.env.VITE_API_URL}/api/songs`, {
-            method: "POST",
-            body: formData,
-          })
+         const token = localStorage.getItem("token");
+
+fetch(`${import.meta.env.VITE_API_URL}/api/songs`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: formData,
+})
             .then((response) => {
               if (!response.ok) {
                 throw new Error("Failed to upload song");
@@ -170,6 +183,8 @@ function App() {
   };
 
   return (
+
+   
     <div className={`player-app ${isSheetOpen ? "sheet-open" : ""}`}>
       <input
         ref={fileInputRef}
@@ -178,6 +193,8 @@ function App() {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
+
+       <GoogleLoginButton />
 
       {songs.length === 0 ? (
         <div className="player-status">
@@ -211,6 +228,7 @@ function App() {
         </>
       )}
     </div>
+  
   );
 }
 

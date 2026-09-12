@@ -53,6 +53,19 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
     );
   }
 
+ const handleShare = async () => {
+  const shareUrl = `${window.location.origin}/?song=${song._id}`;
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+
+    
+  } catch (error) {
+    console.error("Copy link failed:", error);
+    alert("Could not copy the song link.");
+  }
+};
+
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
   const handleSwipeStart = (event) => {
@@ -107,6 +120,10 @@ const handleSwipeEnd = () => {
       <div className="now-playing-meta">
         <h2>{song.title}</h2>
         {song.artist && <p>{song.artist}</p>}
+
+        <button className="upload-trigger" onClick={handleShare}>
+             Share
+        </button>
       </div>
 
       <audio

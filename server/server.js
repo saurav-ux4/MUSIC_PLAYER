@@ -3,8 +3,10 @@ import express from "express";
 import cors from "cors";
 
 
+
 import connectDB from "./config/db.js";
 import songRoutes from "./routes/songRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 
 
@@ -24,6 +26,8 @@ app.get("/",(req,res)=>{
 });
 
 app.use("/api/songs", songRoutes);
+
+app.use("/api/auth", authRoutes);//here
 
 const PORT = process.env.PORT||5000;
 

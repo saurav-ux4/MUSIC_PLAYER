@@ -19,7 +19,11 @@ const songSchema = new mongoose.Schema({
      coverImage: {
      type: String,
      required: true
-    }
+    },
+    uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+   }
     },
     {
         timestamps:true

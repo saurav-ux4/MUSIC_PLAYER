@@ -88,11 +88,12 @@ const audioFile = req.file;
 
    
      const song = await Song.create({
-      title,
-      duration,
-      audioUrl: audioUpload.secure_url,
-      coverImage: req.body.coverImage ,
-    });
+  title,
+  duration,
+  audioUrl: audioUpload.secure_url,
+  coverImage: req.body.coverImage,
+  uploadedBy: req.user._id,
+});
 
     res.status(201).json(song);
   } catch (error) {
