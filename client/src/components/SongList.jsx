@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import SongCard from "./SongCard";
 
-function SongList({ songs, currentSong, onSelect, isOpen, onOpenChange, onUploadClick }) {
+function SongList({ songs, currentSong, onSelect,  onOpenChange, onUploadClick }) {
   const sheetRef = useRef(null);
   const dragState = useRef(null);
   const [dragOffset, setDragOffset] = useState(0);

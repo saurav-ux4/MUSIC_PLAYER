@@ -12,7 +12,7 @@ function App() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/songs")
+    fetch(`${import.meta.env.VITE_API_URL}/api/songs`)
       .then(async (response) => {
         const data = await response.json();
 
@@ -141,7 +141,7 @@ function App() {
 
           console.log("Cover image:", formData.get("coverImage"));
 
-          fetch("http://localhost:5000/api/songs", {
+          fetch(`${import.meta.env.VITE_API_URL}/api/songs`, {
             method: "POST",
             body: formData,
           })

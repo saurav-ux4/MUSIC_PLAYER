@@ -15,6 +15,10 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  const dragState = useRef(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
   useEffect(() => {
     if (!song) {
       return;
@@ -51,8 +55,45 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
+  const handleSwipeStart = (event) => {
+  dragState.current = { startY: event.clientY };
+  setIsDragging(true);
+  event.currentTarget.setPointerCapture(event.pointerId);
+};
+
+const handleSwipeMove = (event) => {
+  if (!dragState.current) {
+    return;
+  }
+
+  const delta = dragState.current.startY - event.clientY;
+  setDragOffset(Math.max(0, delta));
+};
+
+const handleSwipeEnd = () => {
+  if (!dragState.current) {
+    return;
+  }
+
+  const shouldOpen = dragOffset > 60;
+
+  setIsDragging(false);
+  setDragOffset(0);
+  dragState.current = null;
+
+  if (shouldOpen) {
+    onOpenSheet();
+  }
+};
+
   return (
-    <div className="now-playing">
+    <div className="now-playing"
+       onPointerDown={handleSwipeStart}
+       onPointerMove={handleSwipeMove}
+       onPointerUp={handleSwipeEnd}
+       onPointerCancel={handleSwipeEnd}
+       style={isDragging ? { transform: `translateY(-${dragOffset}px)` } : undefined}>
+
       <div className="now-playing-header">
         <span className="header-spacer" />
         <h1>Now Playing</h1>
