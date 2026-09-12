@@ -1,29 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import SongList from "./components/SongList";
 import MusicPlayer from "./components/MusicPlayer";
 
-
-
 function App() {
   const [songs, setSongs] = useState([]);
-   const [currentSong, setCurrentSong] = useState(null);
+  const [currentSong, setCurrentSong] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetch("http://localhost:5000/api/songs")
-        
-     .then(async (response) => {
-  const data = await response.json();
+      .then(async (response) => {
+        const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to upload song");
-  }
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to upload song");
+        }
 
-  return data;
-})
-
+        return data;
+      })
       .then((data) => {
         setSongs(data);
 
@@ -41,155 +39,174 @@ function App() {
 
   const handleSelectSong = (song) => {
     setCurrentSong(song);
+    setIsSheetOpen(false);
   };
 
   if (loading) {
-    return <h1>Loading songs...</h1>;
+    return (
+      <div className="player-status">
+        <h1>Loading songs...</h1>
+      </div>
+    );
   }
 
   if (error) {
-    return <h1>Failed to load songs.</h1>;
-  }
-
-  if (songs.length === 0) {
-    return <h1>No songs available.</h1>;
+    return (
+      <div className="player-status">
+        <h1>Failed to load songs.</h1>
+      </div>
+    );
   }
 
   const handleNext = () => {
-  const currentIndex = songs.findIndex(
-    (song) => song._id === currentSong?._id
-  );
+    const currentIndex = songs.findIndex(
+      (song) => song._id === currentSong?._id
+    );
 
-  if (currentIndex < songs.length - 1) {
-    setCurrentSong(songs[currentIndex + 1]);
-  }
-};
+    if (currentIndex < songs.length - 1) {
+      setCurrentSong(songs[currentIndex + 1]);
+    }
+  };
 
-const handlePrevious = () => {
-  const currentIndex = songs.findIndex(
-    (song) => song._id === currentSong?._id
-  );
+  const handlePrevious = () => {
+    const currentIndex = songs.findIndex(
+      (song) => song._id === currentSong?._id
+    );
 
-  if (currentIndex > 0) {
-    setCurrentSong(songs[currentIndex - 1]);
-  }
-};
+    if (currentIndex > 0) {
+      setCurrentSong(songs[currentIndex - 1]);
+    }
+  };
 
-const handleRandom = () => {
-  if (songs.length <= 1) {
-    return;
-  }
+  const handleRandom = () => {
+    if (songs.length <= 1) {
+      return;
+    }
 
-  const currentIndex = songs.findIndex(
-    (song) => song._id === currentSong?._id
-  );
+    const currentIndex = songs.findIndex(
+      (song) => song._id === currentSong?._id
+    );
 
-  let randomIndex;
+    let randomIndex;
 
-  do {
-    randomIndex = Math.floor(Math.random() * songs.length);
-  } while (randomIndex === currentIndex);
+    do {
+      randomIndex = Math.floor(Math.random() * songs.length);
+    } while (randomIndex === currentIndex);
 
-  setCurrentSong(songs[randomIndex]);
-};
+    setCurrentSong(songs[randomIndex]);
+  };
 
-  return (
-    <div className="app">
-      <h1>Music Player</h1>
-      <input
-         type="file"
-         accept="audio/mpeg"
-         onChange={(event) => {
-                 const file = event.target.files[0];
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
 
-           if (!file) {
-            return;
-             }
+    if (!file) {
+      return;
+    }
 
-             const audio = new Audio();
+    const audio = new Audio();
 
-             audio.src = URL.createObjectURL(file);
+    audio.src = URL.createObjectURL(file);
 
-             audio.addEventListener("loadedmetadata", () => {
-             console.log("File:", file);
-console.log("Duration:", audio.duration);
+    audio.addEventListener("loadedmetadata", () => {
+      console.log("File:", file);
+      console.log("Duration:", audio.duration);
 
-const formData = new FormData();
+      const formData = new FormData();
 
-formData.append("title", file.name);
-formData.append("audio", file);
-formData.append("duration", audio.duration);
+      formData.append("title", file.name);
+      formData.append("audio", file);
+      formData.append("duration", audio.duration);
 
-console.log(formData.get("title"));
-console.log(formData.get("audio"));
-console.log(formData.get("duration"));
+      console.log(formData.get("title"));
+      console.log(formData.get("audio"));
+      console.log(formData.get("duration"));
 
-const title = file.name.replace(".mp3", "");
+      const title = file.name.replace(".mp3", "");
 
-fetch(
-  `https://itunes.apple.com/search?term=${encodeURIComponent(
-    title
-  )}&entity=song&limit=1`
-)
-  .then((response) => response.json())
-  .then((data) => {
-        const artworkUrl = data.results[0]?.artworkUrl100;
+      fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(
+          title
+        )}&entity=song&limit=1`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          const artworkUrl = data.results[0]?.artworkUrl100;
 
           console.log("Artwork URL:", artworkUrl);
 
-           const finalCoverImage =
-  artworkUrl || "https://placehold.co/600x600?text=Music";
+          const finalCoverImage =
+            artworkUrl || "https://placehold.co/600x600?text=Music";
 
-formData.append("coverImage", finalCoverImage);
+          formData.append("coverImage", finalCoverImage);
 
-console.log("Cover image:", formData.get("coverImage"));
+          console.log("Cover image:", formData.get("coverImage"));
 
-    fetch("http://localhost:5000/api/songs", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to upload song");
-        }
+          fetch("http://localhost:5000/api/songs", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Failed to upload song");
+              }
 
-        return response.json();
-      })
-      .then((song) => {
-        console.log("Song uploaded:", song);
-          setSongs((previousSongs) => [song, ...previousSongs]);
-          setCurrentSong(song);
-      })
-      .catch((error) => {
-        console.error("Upload failed:", error);
-      });
-  })
-  .catch((error) => {
-    console.error("Artwork search failed:", error);
-  });
+              return response.json();
+            })
+            .then((song) => {
+              console.log("Song uploaded:", song);
+              setSongs((previousSongs) => [song, ...previousSongs]);
+              setCurrentSong(song);
+            })
+            .catch((error) => {
+              console.error("Upload failed:", error);
+            });
+        })
+        .catch((error) => {
+          console.error("Artwork search failed:", error);
+        });
 
-URL.revokeObjectURL(audio.src);
-          });
-            }}
+      URL.revokeObjectURL(audio.src);
+    });
+  };
+
+  return (
+    <div className={`player-app ${isSheetOpen ? "sheet-open" : ""}`}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="audio/mpeg"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
       />
 
-
-      
-       
-        {songs.length === 0 ? (
-        <h2>No songs available.</h2>
+      {songs.length === 0 ? (
+        <div className="player-status">
+          <h1>No songs available.</h1>
+          <button
+            className="upload-trigger"
+            onClick={() => fileInputRef.current.click()}
+          >
+            Upload a song
+          </button>
+        </div>
       ) : (
         <>
-          <SongList
-            songs={songs}
-            onSelect={handleSelectSong}
-          />
-
           <MusicPlayer
             song={currentSong}
             onPrevious={handlePrevious}
             onNext={handleNext}
             onRandom={handleRandom}
+            onOpenSheet={() => setIsSheetOpen(true)}
+             onAddSong={() => fileInputRef.current.click()}
+          />
+
+          <SongList
+            songs={songs}
+            currentSong={currentSong}
+            onSelect={handleSelectSong}
+            isOpen={isSheetOpen}
+            onOpenChange={setIsSheetOpen}
+            onUploadClick={() => fileInputRef.current.click()}
           />
         </>
       )}

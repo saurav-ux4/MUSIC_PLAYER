@@ -1,5 +1,6 @@
 .app {
   padding: 24px;
+  padding-bottom: 260px;
 }
 
 .song-list {
@@ -14,9 +15,20 @@
   border-radius: 8px;
 }
 
-.song-card img {
+
+
+.music-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 6px;
+  background: white;
+  border-top: 1px solid #ddd;
+  padding: 12px 24px;
+  box-sizing: border-box;
+}
+
+.music-player-content {
+  max-width: 1000px;
+  margin: 0 auto;
 }

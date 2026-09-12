@@ -9,11 +9,11 @@ function formatTime(seconds) {
     .padStart(2, "0")}`;
 }
 
-function MusicPlayer({ song,onNext , onPrevious,onRandom }) {
+function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSong}) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     if (!song) {
@@ -21,16 +21,15 @@ const [duration, setDuration] = useState(0);
     }
 
     audioRef.current.load();
-     audioRef.current
-    .play()
-    .then(() => {
-      setIsPlaying(true);
-    })
-    .catch(() => {
-      setIsPlaying(false);
-    });
-}, [song]);
-   
+    audioRef.current
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(() => {
+        setIsPlaying(false);
+      });
+  }, [song]);
 
   const handlePlayPause = () => {
     if (isPlaying) {
@@ -43,52 +42,154 @@ const [duration, setDuration] = useState(0);
   };
 
   if (!song) {
-    return <p>No song selected.</p>;
+    return (
+      <div className="player-status">
+        <p>No song selected.</p>
+      </div>
+    );
   }
 
+  const progress = duration ? (currentTime / duration) * 100 : 0;
+
   return (
-    <div>
-      <img src={song.coverImage} alt={song.title} width="100" />
+    <div className="now-playing">
+      <div className="now-playing-header">
+        <span className="header-spacer" />
+        <h1>Now Playing</h1>
+        <span className="header-spacer" />
+      </div>
 
-      <h2>{song.title}</h2>
+      <div className="now-playing-art">
+        <img src={song.coverImage} alt={song.title} />
+      </div>
 
-      <audio ref={audioRef} src={song.audioUrl}
-                onTimeUpdate={(event) => setCurrentTime(event.target.currentTime)}
-                onLoadedMetadata={(event) => setDuration(event.target.duration)}
-                 onEnded={onNext} />
+      <div className="now-playing-meta">
+        <h2>{song.title}</h2>
+        {song.artist && <p>{song.artist}</p>}
+      </div>
 
-      <p>
-         {formatTime(currentTime)}/ {formatTime(duration)}
-     </p>
+      <audio
+        ref={audioRef}
+        src={song.audioUrl}
+        onTimeUpdate={(event) => setCurrentTime(event.target.currentTime)}
+        onLoadedMetadata={(event) => setDuration(event.target.duration)}
+        onEnded={onNext}
+      />
 
-     <input
-  type="range"
-  min="0"
-  max={duration}
-  value={currentTime}
-  onChange={(event) => {
-    audioRef.current.currentTime = event.target.value;
-  }}
-/>
+      <div className="now-playing-progress">
+        <input
+          className="seek"
+          style={{ "--progress": `${progress}%` }}
+          type="range"
+          min="0"
+          max={duration}
+          value={currentTime}
+          onChange={(event) => {
+            audioRef.current.currentTime = event.target.value;
+          }}
+        />
 
-      <button onClick={onPrevious}>
-          Previous
+        <div className="now-playing-time">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      <div className="now-playing-controls">
+        <button className="icon-button ghost" onClick={onRandom} aria-label="Shuffle">
+          <ShuffleIcon />
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+          <button className="icon-button secondary" onClick={onPrevious} aria-label="Previous">
+            <PreviousIcon />
+          </button>
+
+          <button
+            className="icon-button primary"
+            onClick={handlePlayPause}
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? <PauseIcon /> : <PlayIcon />}
+          </button>
+
+          <button className="icon-button secondary" onClick={onNext} aria-label="Next">
+            <NextIcon />
+          </button>
+        </div>
+
+        <button className="icon-button ghost" onClick={onAddSong} aria-label="Add">
+          <PlusIcon />
+        </button>
+      </div>
+
+      <button className="swipe-hint" onClick={onOpenSheet} aria-label="Show songs">
+        <ChevronUpIcon />
       </button>
- 
-      <button onClick={handlePlayPause}>
-        {isPlaying ? "Pause" : "Play"}
-      </button>
-
-      <button onClick={onNext}>
-         Next
-      </button>
-
-      <button onClick={onRandom}>
-        Random
-     </button>
-
-      
     </div>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="5" width="4" height="14" />
+      <rect x="14" y="5" width="4" height="14" />
+    </svg>
+  );
+}
+
+function NextIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M6 5v14l9-7z" />
+      <rect x="16" y="5" width="2.5" height="14" />
+    </svg>
+  );
+}
+
+function PreviousIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18 5v14l-9-7z" />
+      <rect x="5.5" y="5" width="2.5" height="14" />
+    </svg>
+  );
+}
+
+function ShuffleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 3h5v5" />
+      <path d="M4 20L21 3" />
+      <path d="M21 16v5h-5" />
+      <path d="M15 15l6 6" />
+      <path d="M4 4l5 5" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 15l6-6 6 6" />
+    </svg>
   );
 }
 
