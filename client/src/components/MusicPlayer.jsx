@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Comments from "./Comments";
 
 function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60);
@@ -227,6 +228,8 @@ const handleLike = async () => {
       </div>
 
       <div className="now-playing-controls">
+        <Comments song={song} />
+        
         <button className="icon-button ghost" onClick={onRandom} aria-label="Shuffle">
           <ShuffleIcon />
         </button>

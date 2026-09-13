@@ -8,6 +8,7 @@ import connectDB from "./config/db.js";
 import songRoutes from "./routes/songRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import likeRoutes from "./routes/likeRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 
 
 
@@ -19,6 +20,7 @@ const app= express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/likes", likeRoutes);
+app.use("/api/comments", commentRoutes);
 
 
 app.get("/",(req,res)=>{
