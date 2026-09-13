@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import SongList from "./components/SongList";
 import MusicPlayer from "./components/MusicPlayer";
-import GoogleLoginButton from "./components/GoogleLoginButton.jsx";
+
 
 function App() {
   const [songs, setSongs] = useState([]);
@@ -193,9 +193,8 @@ fetch(`${import.meta.env.VITE_API_URL}/api/songs`, {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
-
-       <GoogleLoginButton />
-
+       
+      
       {songs.length === 0 ? (
         <div className="player-status">
           <h1>No songs available.</h1>

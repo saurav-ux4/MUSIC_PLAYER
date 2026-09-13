@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import Comments from "./Comments";
+import LikedSongs from "./LikedSongs";
+import AccountPanel from "./AccountPanel";
 
 function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
 
-  return `${minutes}:${remainingSeconds
-    .toString()
-    .padStart(2, "0")}`;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
-function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSong}) {
+function MusicPlayer({
+  song,
+  onNext,
+  onPrevious,
+  onRandom,
+  onOpenSheet,
+  onAddSong,
+  onSelectSong,
+}) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -19,6 +27,12 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
   const dragState = useRef(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [isLikedListOpen, setIsLikedListOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const longPressTimer = useRef(null);
+  const longPressTriggered = useRef(false);
 
   useEffect(() => {
     if (!song) {
@@ -36,7 +50,7 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
       });
   }, [song]);
 
-   useEffect(() => {
+  useEffect(() => {
     const checkLikeStatus = async () => {
       const token = localStorage.getItem("token");
 
@@ -89,117 +103,158 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
     );
   }
 
- const handleShare = async () => {
-  const shareUrl = `${window.location.origin}/?song=${song._id}`;
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/?song=${song._id}`;
 
-  try {
-    await navigator.clipboard.writeText(shareUrl);
-
-    
-  } catch (error) {
-    console.error("Copy link failed:", error);
-    alert("Could not copy the song link.");
-  }
-};
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+    } catch (error) {
+      console.error("Copy link failed:", error);
+      alert("Could not copy the song link.");
+    }
+  };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
 
+  const isInteractiveTarget = (event) =>
+    event.target.closest("button, input, a");
+
   const handleSwipeStart = (event) => {
-  dragState.current = { startY: event.clientY };
-  setIsDragging(true);
-  event.currentTarget.setPointerCapture(event.pointerId);
-};
-
-const handleSwipeMove = (event) => {
-  if (!dragState.current) {
-    return;
-  }
-
-  const delta = dragState.current.startY - event.clientY;
-  setDragOffset(Math.max(0, delta));
-};
-
-const handleSwipeEnd = () => {
-  if (!dragState.current) {
-    return;
-  }
-
-  const shouldOpen = dragOffset > 60;
-
-  setIsDragging(false);
-  setDragOffset(0);
-  dragState.current = null;
-
-  if (shouldOpen) {
-    onOpenSheet();
-  }
-};
-
-const handleLike = async () => {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    alert("Please login to like songs.");
-    return;
-  }
-
-  try {
-    const method = liked ? "DELETE" : "POST";
-     
-    console.log(
-      "LIKE URL:",
-      `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`
-    );
-
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`,
-      {
-        method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Like action failed");
+    if (isInteractiveTarget(event)) {
+      return;
     }
 
-    setLiked(!liked);
-  } catch (error) {
-    console.error("Like action failed:", error);
-  }
-};
+    dragState.current = { startY: event.clientY };
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleSwipeMove = (event) => {
+    if (!dragState.current) {
+      return;
+    }
+
+    const delta = dragState.current.startY - event.clientY;
+    setDragOffset(Math.max(0, delta));
+  };
+
+  const handleSwipeEnd = () => {
+    if (!dragState.current) {
+      return;
+    }
+
+    const shouldOpen = dragOffset > 60;
+
+    setIsDragging(false);
+    setDragOffset(0);
+    dragState.current = null;
+
+    if (shouldOpen) {
+      onOpenSheet();
+    }
+  };
+
+  const handleLike = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to like songs.");
+      return;
+    }
+
+    try {
+      const method = liked ? "DELETE" : "POST";
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`,
+        {
+          method,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Like action failed");
+      }
+
+      setLiked(!liked);
+    } catch (error) {
+      console.error("Like action failed:", error);
+    }
+  };
+
+  const handleLikePointerDown = () => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setIsLikedListOpen(true);
+    }, 500);
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleLikeClick = () => {
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    handleLike();
+  };
 
   return (
-    <div className="now-playing"
-       onPointerDown={handleSwipeStart}
-       onPointerMove={handleSwipeMove}
-       onPointerUp={handleSwipeEnd}
-       onPointerCancel={handleSwipeEnd}
-       style={isDragging ? { transform: `translateY(-${dragOffset}px)` } : undefined}>
-
+    <div
+      className="now-playing"
+      onPointerDown={handleSwipeStart}
+      onPointerMove={handleSwipeMove}
+      onPointerUp={handleSwipeEnd}
+      onPointerCancel={handleSwipeEnd}
+      style={isDragging ? { transform: `translateY(-${dragOffset}px)` } : undefined}
+    >
       <div className="now-playing-header">
-        <span className="header-spacer" />
+        {isCommentsOpen ? (
+          <button
+            className="icon-button ghost small"
+            onClick={() => setIsCommentsOpen(false)}
+            aria-label="Back"
+          >
+            <ChevronLeftIcon />
+          </button>
+        ) : (
+          <button
+            className="icon-button ghost small"
+            onClick={() => setIsAccountOpen(true)}
+            aria-label="Account"
+          >
+            <UserIcon />
+          </button>
+        )}
+
         <h1>Now Playing</h1>
-        <span className="header-spacer" />
+
+        {isCommentsOpen ? (
+          <button
+            className="icon-button ghost small"
+            onClick={onAddSong}
+            aria-label="Add"
+          >
+            <PlusIcon />
+          </button>
+        ) : (
+          <span className="header-spacer" />
+        )}
       </div>
 
-      <div className="now-playing-art">
-        <img src={song.coverImage} alt={song.title} />
-      </div>
-
-      <div className="now-playing-meta">
-        <h2>{song.title}</h2>
-        {song.artist && <p>{song.artist}</p>}
-
-        <button className="upload-trigger" onClick={handleShare}>
-             Share
-        </button>
-      </div>
-
+      {/* Audio must stay mounted at all times — otherwise switching to the
+          comments view would unmount it and stop playback mid-song. */}
       <audio
         ref={audioRef}
         src={song.audioUrl}
@@ -208,28 +263,66 @@ const handleLike = async () => {
         onEnded={onNext}
       />
 
-      <div className="now-playing-progress">
-        <input
-          className="seek"
-          style={{ "--progress": `${progress}%` }}
-          type="range"
-          min="0"
-          max={duration}
-          value={currentTime}
-          onChange={(event) => {
-            audioRef.current.currentTime = event.target.value;
-          }}
-        />
+      {isCommentsOpen ? (
+        <Comments song={song} />
+      ) : (
+        <>
+          <div className="now-playing-art">
+            <img src={song.coverImage} alt={song.title} />
+          </div>
 
-        <div className="now-playing-time">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
+          <div className="now-playing-meta">
+            <h2>{song.title}</h2>
+            {song.artist && <p>{song.artist}</p>}
+
+            <button className="upload-trigger" onClick={handleShare}>
+              Share
+            </button>
+          </div>
+
+          <div className="now-playing-progress">
+            <input
+              className="seek"
+              style={{ "--progress": `${progress}%` }}
+              type="range"
+              min="0"
+              max={duration}
+              value={currentTime}
+              onChange={(event) => {
+                audioRef.current.currentTime = event.target.value;
+              }}
+            />
+
+            <div className="now-playing-time">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          <div className="now-playing-engagement">
+            <button
+              className={`icon-button secondary ${liked ? "liked" : ""}`}
+              onPointerDown={handleLikePointerDown}
+              onPointerUp={clearLongPress}
+              onPointerLeave={clearLongPress}
+              onClick={handleLikeClick}
+              aria-label={liked ? "Unlike" : "Like"}
+            >
+              <ThumbIcon filled={liked} />
+            </button>
+
+            <button
+              className="icon-button secondary"
+              onClick={() => setIsCommentsOpen(true)}
+              aria-label="Comments"
+            >
+              <CommentIcon />
+            </button>
+          </div>
+        </>
+      )}
 
       <div className="now-playing-controls">
-        <Comments song={song} />
-        
         <button className="icon-button ghost" onClick={onRandom} aria-label="Shuffle">
           <ShuffleIcon />
         </button>
@@ -255,15 +348,26 @@ const handleLike = async () => {
         <button className="icon-button ghost" onClick={onAddSong} aria-label="Add">
           <PlusIcon />
         </button>
-
-        <button onClick={handleLike}>
-          {liked ? "❤️" : "♡ "}
-        </button>
       </div>
 
       <button className="swipe-hint" onClick={onOpenSheet} aria-label="Show songs">
         <ChevronUpIcon />
       </button>
+
+      <LikedSongs
+        open={isLikedListOpen}
+        currentSong={song}
+        onClose={() => setIsLikedListOpen(false)}
+        onSelect={(selectedSong) => {
+          onSelectSong(selectedSong);
+          setIsLikedListOpen(false);
+        }}
+      />
+
+      <AccountPanel
+        open={isAccountOpen}
+        onClose={() => setIsAccountOpen(false)}
+      />
     </div>
   );
 }
@@ -327,6 +431,39 @@ function ChevronUpIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 15l6-6 6 6" />
+    </svg>
+  );
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ThumbIcon({ filled }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 22V11M2 13v7a2 2 0 0 0 2 2h11.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 17 11h-4.5l.9-4.5A1.5 1.5 0 0 0 12 5L7 11" />
+    </svg>
+  );
+}
+
+function CommentIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21v-1a7 7 0 0 1 14 0v1" />
     </svg>
   );
 }

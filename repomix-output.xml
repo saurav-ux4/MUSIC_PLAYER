@@ -50,7 +50,10 @@ client/
       react.svg
       vite.svg
     components/
+      Comments.jsx
+      GoogleLoginButton.jsx
       MusicPlayer.jsx
+      Profile.jsx
       SongCard.jsx
       SongList.jsx
     App.css
@@ -68,13 +71,26 @@ server/
     cloudinary.js
     db.js
   controllers/
+    authController.js
+    commentController.js
+    likeController.js
     songController.js
+    userController.js
   middleware/
+    adminMiddleware.js
+    authMiddleware.js
     upload.js
   models/
+    Comment.js
+    Like.js
     Song.js
+    User.js
   routes/
+    authRoutes.js
+    commentRoutes.js
+    likeRoutes.js
     songRoutes.js
+    userRoutes.js
   .env.example
   package.json
   server.js
@@ -83,6 +99,90 @@ server/
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="client/src/components/Profile.jsx">
+import { useEffect, useState } from "react";
+
+function Profile() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/users/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+
+        setUser(data);
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div>
+      <img src={user.profileImage} alt={user.name} />
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+
+export default Profile;
+</file>
+
+<file path="server/controllers/userController.js">
+const getMyProfile = async (req, res) => {
+  try {
+    res.status(200).json(req.user);
+  } catch (error) {
+    console.error("Get profile error:", error);
+
+    res.status(500).json({
+      message: "Failed to get profile",
+    });
+  }
+};
+
+export { getMyProfile };
+</file>
+
+<file path="server/routes/userRoutes.js">
+import express from "express";
+
+import authMiddleware from "../middleware/authMiddleware.js";
+import { getMyProfile } from "../controllers/userController.js";
+
+const router = express.Router();
+
+router.get("/me", authMiddleware, getMyProfile);
+
+export default router;
+</file>
 
 <file path="client/public/favicon.svg">
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="46" fill="none" viewBox="0 0 48 46"><path fill="#863bff" d="M25.946 44.938c-.664.845-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.287c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.497 0-3.578-1.842-3.578H1.237c-.92 0-1.456-1.04-.92-1.788L10.013.474c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.579 1.842 3.579h11.377c.943 0 1.473 1.088.89 1.83L25.947 44.94z" style="fill:#863bff;fill:color(display-p3 .5252 .23 1);fill-opacity:1"/><mask id="a" width="48" height="46" x="0" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M25.842 44.938c-.664.844-2.021.375-2.021-.698V33.937a2.26 2.26 0 0 0-2.262-2.262H10.183c-.92 0-1.456-1.04-.92-1.788l7.48-10.471c1.07-1.498 0-3.579-1.842-3.579H1.133c-.92 0-1.456-1.04-.92-1.787L9.91.473c.214-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.471c-1.07 1.498 0 3.578 1.842 3.578h11.377c.943 0 1.473 1.088.89 1.832L25.843 44.94z" style="fill:#000;fill-opacity:1"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#ede6ff" rx="5.508" ry="14.704" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -4.47 31.516)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#ede6ff" rx="10.399" ry="29.851" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -39.328 7.883)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#7e14ff" rx="5.508" ry="30.487" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -25.913 -14.639)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.814 -32.644 -3.334)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#7e14ff" rx="5.508" ry="30.599" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="matrix(.00324 1 1 -.00324 -34.34 30.47)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#ede6ff" rx="14.072" ry="22.078" style="fill:#ede6ff;fill:color(display-p3 .9275 .9033 1);fill-opacity:1" transform="rotate(93.35 24.506 48.493)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#7e14ff" rx="3.47" ry="21.501" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(89.009 28.708 47.59)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx=".387" cy="8.972" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(39.51 .387 8.972)"/></g><g filter="url(#k)"><ellipse cx="47.523" cy="-6.092" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 47.523 -6.092)"/></g><g filter="url(#l)"><ellipse cx="41.412" cy="6.333" fill="#47bfff" rx="5.971" ry="9.665" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 41.412 6.333)"/></g><g filter="url(#m)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#n)"><ellipse cx="-1.879" cy="38.332" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 -1.88 38.332)"/></g><g filter="url(#o)"><ellipse cx="35.651" cy="29.907" fill="#7e14ff" rx="4.407" ry="29.108" style="fill:#7e14ff;fill:color(display-p3 .4922 .0767 1);fill-opacity:1" transform="rotate(37.892 35.651 29.907)"/></g><g filter="url(#p)"><ellipse cx="38.418" cy="32.4" fill="#47bfff" rx="5.971" ry="15.297" style="fill:#47bfff;fill:color(display-p3 .2799 .748 1);fill-opacity:1" transform="rotate(37.892 38.418 32.4)"/></g></g><defs><filter id="b" width="60.045" height="41.654" x="-19.77" y="16.149" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-54.613" y="-7.533" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-49.64" y="2.03" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-45.045" y="20.029" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-43.513" y="21.178" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="15.756" y="-17.901" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="23.548" y="2.284" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-27.636" y="-22.853" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="20.116" y="-38.415" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="24.641" y="-11.323" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-29.286" y="6.009" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="8.244" y="-2.416" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="18.713" y="10.588" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17158" stdDeviation="4.596"/></filter></defs></svg>
@@ -123,17 +223,147 @@ This section contains the contents of the repository's files.
 <svg xmlns="http://www.w3.org/2000/svg" width="77" height="47" fill="none" aria-labelledby="vite-logo-title" viewBox="0 0 77 47"><title id="vite-logo-title">Vite</title><style>.parenthesis{fill:#000}@media (prefers-color-scheme:dark){.parenthesis{fill:#fff}}</style><path fill="#9135ff" d="M40.151 45.71c-.663.844-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.493c-.92 0-1.457-1.04-.92-1.788l7.479-10.471c1.07-1.498 0-3.578-1.842-3.578H15.443c-.92 0-1.456-1.04-.92-1.788l9.696-13.576c.213-.297.556-.474.92-.474h28.894c.92 0 1.456 1.04.92 1.788l-7.48 10.472c-1.07 1.497 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.087.89 1.83L40.153 45.712z"/><mask id="a" width="48" height="47" x="14" y="0" maskUnits="userSpaceOnUse" style="mask-type:alpha"><path fill="#000" d="M40.047 45.71c-.663.843-2.02.374-2.02-.699V34.708a2.26 2.26 0 0 0-2.262-2.262H24.389c-.92 0-1.457-1.04-.92-1.788l7.479-10.472c1.07-1.497 0-3.578-1.842-3.578H15.34c-.92 0-1.456-1.04-.92-1.788l9.696-13.575c.213-.297.556-.474.92-.474H53.93c.92 0 1.456 1.04.92 1.788L47.37 13.03c-1.07 1.498 0 3.578 1.842 3.578h11.376c.944 0 1.474 1.088.89 1.831L40.049 45.712z"/></mask><g mask="url(#a)"><g filter="url(#b)"><ellipse cx="5.508" cy="14.704" fill="#eee6ff" rx="5.508" ry="14.704" transform="rotate(269.814 20.96 11.29)scale(-1 1)"/></g><g filter="url(#c)"><ellipse cx="10.399" cy="29.851" fill="#eee6ff" rx="10.399" ry="29.851" transform="rotate(89.814 -16.902 -8.275)scale(1 -1)"/></g><g filter="url(#d)"><ellipse cx="5.508" cy="30.487" fill="#8900ff" rx="5.508" ry="30.487" transform="rotate(89.814 -19.197 -7.127)scale(1 -1)"/></g><g filter="url(#e)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.928 4.177)scale(1 -1)"/></g><g filter="url(#f)"><ellipse cx="5.508" cy="30.599" fill="#8900ff" rx="5.508" ry="30.599" transform="rotate(89.814 -25.738 5.52)scale(1 -1)"/></g><g filter="url(#g)"><ellipse cx="14.072" cy="22.078" fill="#eee6ff" rx="14.072" ry="22.078" transform="rotate(93.35 31.245 55.578)scale(-1 1)"/></g><g filter="url(#h)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#i)"><ellipse cx="3.47" cy="21.501" fill="#8900ff" rx="3.47" ry="21.501" transform="rotate(89.009 35.419 55.202)scale(-1 1)"/></g><g filter="url(#j)"><ellipse cx="14.592" cy="9.743" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(39.51 14.592 9.743)"/></g><g filter="url(#k)"><ellipse cx="61.728" cy="-5.321" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 61.728 -5.32)"/></g><g filter="url(#l)"><ellipse cx="55.618" cy="7.104" fill="#00c2ff" rx="5.971" ry="9.665" transform="rotate(37.892 55.618 7.104)"/></g><g filter="url(#m)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#n)"><ellipse cx="12.326" cy="39.103" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 12.326 39.103)"/></g><g filter="url(#o)"><ellipse cx="49.857" cy="30.678" fill="#8900ff" rx="4.407" ry="29.108" transform="rotate(37.892 49.857 30.678)"/></g><g filter="url(#p)"><ellipse cx="52.623" cy="33.171" fill="#00c2ff" rx="5.971" ry="15.297" transform="rotate(37.892 52.623 33.17)"/></g></g><path d="M6.919 0c-9.198 13.166-9.252 33.575 0 46.789h6.215c-9.25-13.214-9.196-33.623 0-46.789zm62.424 0h-6.215c9.198 13.166 9.252 33.575 0 46.789h6.215c9.25-13.214 9.196-33.623 0-46.789" class="parenthesis"/><defs><filter id="b" width="60.045" height="41.654" x="-5.564" y="16.92" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="c" width="90.34" height="51.437" x="-40.407" y="-6.762" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="d" width="79.355" height="29.4" x="-35.435" y="2.801" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="e" width="79.579" height="29.4" x="-30.84" y="20.8" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="f" width="79.579" height="29.4" x="-29.307" y="21.949" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="g" width="74.749" height="58.852" x="29.961" y="-17.13" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="7.659"/></filter><filter id="h" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="i" width="61.377" height="25.362" x="37.754" y="3.055" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="j" width="56.045" height="63.649" x="-13.43" y="-22.082" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="k" width="54.814" height="64.646" x="34.321" y="-37.644" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="l" width="33.541" height="35.313" x="38.847" y="-10.552" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="m" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="n" width="54.814" height="64.646" x="-15.081" y="6.78" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="o" width="54.814" height="64.646" x="22.45" y="-1.645" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter><filter id="p" width="39.409" height="43.623" x="32.919" y="11.36" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feBlend in="SourceGraphic" in2="BackgroundImageFix" result="shape"/><feGaussianBlur result="effect1_foregroundBlur_2002_17286" stdDeviation="4.596"/></filter></defs></svg>
 </file>
 
-<file path="client/src/main.jsx">
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+<file path="client/src/components/Comments.jsx">
+import { useEffect, useState } from "react";
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+function Comments({song}) {
+  const [text, setText] = useState("");
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/comments/${song._id}`
+      );
+
+      const data = await response.json();
+
+      setComments(data);
+    } catch (error) {
+      console.error("Failed to fetch comments:", error);
+    }
+  };
+
+  fetchComments();
+}, [song]);
+
+   if (!song) {
+  return null;
+}
+
+
+const handleSubmit = async (event) => {
+  event.preventDefault();
+
+  if (!text.trim()) {
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/comments/${song._id}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          text,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Failed to post comment");
+      return;
+    }
+
+    setComments((currentComments) => [data, ...currentComments]);
+    setText("");
+  } catch (error) {
+    console.error("Post comment error:", error);
+  }
+};
+
+
+const handleDelete = async (commentId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/comments/${commentId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "Failed to delete comment");
+      return;
+    }
+
+    setComments((currentComments) =>
+      currentComments.filter((comment) => comment._id !== commentId)
+    );
+  } catch (error) {
+    console.error("Delete comment error:", error);
+  }
+};
+
+  return (
+    <section className="comments">
+      <h2>Comments</h2>
+
+      <form className="comment-form"  onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Write a comment..."
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+        />
+
+        <button type="submit">
+          Post
+        </button>
+      </form>
+
+      <div className="comment-list">
+  {comments.length === 0 ? (
+    <p className="comments-empty">
+      No comments yet.
+    </p>
+  ) : (
+    comments.map((comment) => (
+      <div className="comment" key={comment._id}>
+        <strong>{comment.user.name || "unknown user"}</strong>
+        <p>{comment.text}</p>
+
+         <button onClick={() => handleDelete(comment._id)}>
+          Delete
+        </button>
+      </div>
+    ))
+  )}
+</div>
+
+
+
+    </section>
+  );
+}
+
+export default Comments;
 </file>
 
 <file path="client/.gitignore">
@@ -203,36 +433,6 @@ export default defineConfig([
 </html>
 </file>
 
-<file path="client/package.json">
-{
-  "name": "client",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "@vitejs/plugin-react": "^6.1.0",
-    "eslint": "^10.9.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.4",
-    "globals": "^17.11.0",
-    "vite": "^8.2.2"
-  }
-}
-</file>
-
 <file path="client/README.md">
 # React + Vite
 
@@ -274,6 +474,303 @@ cloudinary.config({
 export default cloudinary;
 </file>
 
+<file path="server/controllers/authController.js">
+import { OAuth2Client } from "google-auth-library";
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        message: "Google credential is required",
+      });
+    }
+
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    const { sub, name, email, picture } = payload;
+
+    let user = await User.findOne({ googleId: sub });
+
+    if (!user) {
+      user = await User.create({
+        googleId: sub,
+        name,
+        email,
+        profileImage: picture || "",
+      });
+    }
+
+   const token = jwt.sign(
+  { userId: user._id },
+  process.env.JWT_SECRET,
+  { expiresIn: "7d" }
+);
+
+res.status(200).json({
+  message: "Google login successful",
+  token,
+  user,
+});
+
+  } catch (error) {
+    console.error("Google login error:", error);
+
+    res.status(401).json({
+      message: "Invalid Google credential",
+    });
+  }
+};
+</file>
+
+<file path="server/controllers/commentController.js">
+import Comment from "../models/Comment.js";
+
+const getComments = async (req, res) => {
+  try {
+    const { songId } = req.params;
+
+    const comments = await Comment.find({ song: songId })
+      .populate("user", "name profileImage")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(comments);
+  } catch (error) {
+    console.error("Get comments error:", error);
+
+    res.status(500).json({
+      message: "Failed to get comments",
+    });
+  }
+};
+
+const createComment = async (req, res) => {
+  try {
+    const { songId } = req.params;
+    const { text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({
+        message: "Comment text is required",
+      });
+    }
+
+    const comment = await Comment.create({
+      text: text.trim(),
+      user: req.user._id,
+      song: songId,
+    });
+
+    const populatedComment = await comment.populate(
+      "user",
+      "name profileImage"
+    );
+
+    res.status(201).json(populatedComment);
+  } catch (error) {
+    console.error("Create comment error:", error);
+
+    res.status(500).json({
+      message: "Failed to create comment",
+    });
+  }
+};
+
+const deleteComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+
+  
+
+    const comment = await Comment.findById(commentId);
+
+
+
+    if (!comment) {
+      return res.status(404).json({
+        message: "Comment does not exist",
+      });
+    }
+
+    if (comment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "You do not own this comment",
+      });
+    }
+
+    await Comment.findByIdAndDelete(commentId);
+
+    res.status(200).json({
+      message: "Comment deleted",
+    });
+  } catch (error) {
+    console.error("Delete comment error:", error);
+
+    res.status(500).json({
+      message: "Failed to delete comment",
+    });
+  }
+};
+
+export {
+  getComments,
+  createComment,
+  deleteComment,
+};
+</file>
+
+<file path="server/controllers/likeController.js">
+import Like from "../models/Like.js";
+
+const likeSong = async (req, res) => {
+  try {
+    const { songId } = req.params;
+
+    const existingLike = await Like.findOne({
+      user: req.user._id,
+      song: songId,
+    });
+
+    if (existingLike) {
+      return res.status(409).json({
+        message: "Song already liked",
+      });
+    }
+
+    const like = await Like.create({
+      user: req.user._id,
+      song: songId,
+    });
+
+    res.status(201).json(like);
+  } catch (error) {
+    console.error("Like song error:", error);
+
+    res.status(500).json({
+      message: "Failed to like song",
+    });
+  }
+};
+
+const unlikeSong = async (req, res) => {
+  try {
+    const { songId } = req.params;
+
+    const like = await Like.findOneAndDelete({
+      user: req.user._id,
+      song: songId,
+    });
+
+    if (!like) {
+      return res.status(404).json({
+        message: "Like not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Song unliked",
+    });
+  } catch (error) {
+    console.error("Unlike song error:", error);
+
+    res.status(500).json({
+      message: "Failed to unlike song",
+    });
+  }
+};
+
+
+const getLikeStatus = async (req, res) => {
+  try {
+    const { songId } = req.params;
+
+    const like = await Like.findOne({
+      user: req.user._id,
+      song: songId,
+    });
+
+    res.status(200).json({
+      liked: !!like,
+    });
+  } catch (error) {
+    console.error("Get like status error:", error);
+
+    res.status(500).json({
+      message: "Failed to get like status",
+    });
+  }
+};
+
+export {
+  likeSong,
+  unlikeSong,
+  getLikeStatus,
+};
+</file>
+
+<file path="server/middleware/adminMiddleware.js">
+const adminMiddleware = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      message: "Admin access required",
+    });
+  }
+
+  next();
+};
+
+export default adminMiddleware;
+</file>
+
+<file path="server/middleware/authMiddleware.js">
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
+
+const authMiddleware = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found",
+      });
+    }
+
+    req.user = user;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: "Invalid or expired token",
+    });
+  }
+};
+
+export default authMiddleware;
+</file>
+
 <file path="server/middleware/upload.js">
 import multer from "multer";
 
@@ -284,6 +781,166 @@ const upload = multer({
 });
 
 export default upload;
+</file>
+
+<file path="server/models/Comment.js">
+import mongoose from "mongoose";
+
+const commentSchema = new mongoose.Schema(
+  {
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    song: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Song",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const Comment = mongoose.model("Comment", commentSchema);
+
+export default Comment;
+</file>
+
+<file path="server/models/Like.js">
+import mongoose from "mongoose";
+
+const likeSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    song: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Song",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+likeSchema.index({ user: 1, song: 1 }, { unique: true });
+
+const Like = mongoose.model("Like", likeSchema);
+
+export default Like;
+</file>
+
+<file path="server/models/User.js">
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema(
+  {
+    googleId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    name: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+    },
+
+    profileImage: {
+      type: String,
+      default: "",
+    },
+
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const User = mongoose.model("User", userSchema);
+
+export default User;
+</file>
+
+<file path="server/routes/authRoutes.js">
+import express from "express";
+import { googleLogin } from "../controllers/authController.js";
+
+const router = express.Router();
+
+router.post("/google", googleLogin);
+
+export default router;
+</file>
+
+<file path="server/routes/commentRoutes.js">
+import express from "express";
+
+import authMiddleware from "../middleware/authMiddleware.js";
+import {
+  getComments,
+  createComment,
+  deleteComment,
+} from "../controllers/commentController.js";
+
+const router = express.Router();
+
+// Anyone can view comments
+router.get("/:songId", getComments);
+
+// Login required to create a comment
+router.post("/:songId", authMiddleware, createComment);
+
+// Login required + ownership checked inside controller
+router.delete("/:commentId", authMiddleware, deleteComment);
+
+export default router;
+</file>
+
+<file path="server/routes/likeRoutes.js">
+import express from "express";
+
+import authMiddleware from "../middleware/authMiddleware.js";
+import {
+  likeSong,
+  unlikeSong,
+  getLikeStatus,
+} from "../controllers/likeController.js";
+
+const router = express.Router();
+
+router.get("/:songId", authMiddleware, getLikeStatus);
+
+router.post("/:songId", authMiddleware, likeSong);
+
+router.delete("/:songId", authMiddleware, unlikeSong);
+
+export default router;
 </file>
 
 <file path=".gitignore">
@@ -305,6 +962,48 @@ build/
 #os file
 .DS_Store
 Thumbs.db
+</file>
+
+<file path="client/src/components/GoogleLoginButton.jsx">
+import { GoogleLogin } from "@react-oauth/google";
+
+function GoogleLoginButton() {
+  const handleSuccess = async (credentialResponse) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          credential: credentialResponse.credential,
+        }),
+      });
+
+      const data = await response.json();
+
+    
+      if (data.token) {
+       localStorage.setItem("token", data.token);
+}
+    } catch (error) {
+      console.error("Google login failed:", error);
+    }
+  };
+
+  const handleError = () => {
+    console.log("Google Login Failed");
+  };
+
+  return (
+    <GoogleLogin
+      onSuccess={handleSuccess}
+      onError={handleError}
+    />
+  );
+}
+
+export default GoogleLoginButton;
 </file>
 
 <file path="client/src/index.css">
@@ -701,6 +1400,37 @@ html, body {
 }
 </file>
 
+<file path="client/package.json">
+{
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-oauth/google": "^0.13.5",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "eslint": "^10.9.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.4",
+    "globals": "^17.11.0",
+    "vite": "^8.2.2"
+  }
+}
+</file>
+
 <file path="server/config/db.js">
 import  mongoose from "mongoose";
 
@@ -716,40 +1446,6 @@ const connectDB =async()=>{
 
     
 export default connectDB;
-</file>
-
-<file path="server/models/Song.js">
-import mongoose from "mongoose";
-
-const songSchema = new mongoose.Schema({
-     title:{
-         type:String,
-         required:true,
-         trim:true
-     },
-
-     duration:{
-        type:Number,
-        required:true
-     },
-
-     audioUrl:{
-         type:String,
-         required:true
-     },
-     coverImage: {
-     type: String,
-     required: true
-    }
-    },
-    {
-        timestamps:true
-    }
-);
-
-const Song = mongoose.model("Song", songSchema);
-
-export default Song;
 </file>
 
 <file path="server/.env.example">
@@ -796,6 +1492,100 @@ CLOUDINARY_API_SECRET=
   max-width: 1000px;
   margin: 0 auto;
 }
+</file>
+
+<file path="client/src/main.jsx">
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+import './index.css'
+import App from './App.jsx'
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <App />
+    </GoogleOAuthProvider>
+  </StrictMode>,
+)
+</file>
+
+<file path="server/models/Song.js">
+import mongoose from "mongoose";
+
+const songSchema = new mongoose.Schema({
+     title:{
+         type:String,
+         required:true,
+         trim:true
+     },
+
+     duration:{
+        type:Number,
+        required:true
+     },
+
+     audioUrl:{
+         type:String,
+         required:true
+     },
+     coverImage: {
+     type: String,
+     required: true
+    },
+    uploadedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+   }
+    },
+    {
+        timestamps:true
+    }
+);
+
+const Song = mongoose.model("Song", songSchema);
+
+export default Song;
+</file>
+
+<file path="client/src/components/SongCard.jsx">
+function SongCard({ song, onSelect, isCurrent }) {
+  return (
+    <div
+      className={`song-card ${isCurrent ? "song-card-current" : ""}`}
+      onClick={() => onSelect(song)}
+    >
+      <img className="song-card-art" src={song.coverImage} alt={song.title} />
+
+      <div className="song-card-meta">
+        <h3>{song.title}</h3>
+        <p>{song.duration} sec</p>
+      </div>
+
+      {isCurrent && (
+        <span className="icon-button ghost small" aria-hidden="true">
+          <PlayingIcon />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PlayingIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="4" y="10" width="3" height="6" />
+      <rect x="10.5" y="4" width="3" height="16" />
+      <rect x="17" y="8" width="3" height="10" />
+    </svg>
+  );
+}
+
+export default SongCard;
 </file>
 
 <file path="server/controllers/songController.js">
@@ -889,11 +1679,12 @@ const audioFile = req.file;
 
    
      const song = await Song.create({
-      title,
-      duration,
-      audioUrl: audioUpload.secure_url,
-      coverImage: req.body.coverImage ,
-    });
+  title,
+  duration,
+  audioUrl: audioUpload.secure_url,
+  coverImage: req.body.coverImage,
+  uploadedBy: req.user._id,
+});
 
     res.status(201).json(song);
   } catch (error) {
@@ -968,377 +1759,6 @@ export {
   updateSong,
   deleteSong,
 };
-</file>
-
-<file path="server/routes/songRoutes.js">
-import express from "express";
-import upload from "../middleware/upload.js";
-
-import {
-  getSongs,
-  getSong,
-  createSong,
-  updateSong,
-  deleteSong,
-} from "../controllers/songController.js";
-
-const router = express.Router();
-
-router.get("/", getSongs);
-
-router.get("/:id", getSong);
-
-router.post("/", upload.single("audio"), createSong);
-
-router.put("/:id", updateSong);
-
-router.delete("/:id", deleteSong);
-
- export default router;
-</file>
-
-<file path="client/src/components/SongCard.jsx">
-function SongCard({ song, onSelect, isCurrent }) {
-  return (
-    <div
-      className={`song-card ${isCurrent ? "song-card-current" : ""}`}
-      onClick={() => onSelect(song)}
-    >
-      <img className="song-card-art" src={song.coverImage} alt={song.title} />
-
-      <div className="song-card-meta">
-        <h3>{song.title}</h3>
-        <p>{song.duration} sec</p>
-      </div>
-
-      {isCurrent && (
-        <span className="icon-button ghost small" aria-hidden="true">
-          <PlayingIcon />
-        </span>
-      )}
-    </div>
-  );
-}
-
-function PlayingIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <rect x="4" y="10" width="3" height="6" />
-      <rect x="10.5" y="4" width="3" height="16" />
-      <rect x="17" y="8" width="3" height="10" />
-    </svg>
-  );
-}
-
-export default SongCard;
-</file>
-
-<file path="server/package.json">
-{
-  "name": "server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node --env-file=.env server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "dependencies": {
-    "cloudinary": "^2.11.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mongoose": "^9.9.5",
-    "multer": "^2.3.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
-  }
-}
-</file>
-
-<file path="server/server.js">
-import express from "express";
-import cors from "cors";
-
-
-import connectDB from "./config/db.js";
-import songRoutes from "./routes/songRoutes.js";
-
-
-
-
-
-const app= express();
-
-
-app.use(cors());
-app.use(express.json());
-
-
-app.get("/",(req,res)=>{
-     res.status(200).json({
-         message:"music player  api is  running"
-     });
-});
-
-app.use("/api/songs", songRoutes);
-
-const PORT = process.env.PORT||5000;
-
-const startServer =async ()=>{
-    await connectDB();
-
-    app.listen(PORT,()=>{
-     console.log(`server running  on port ${PORT}`);
-});
-}
-
-startServer();
-</file>
-
-<file path="client/src/components/MusicPlayer.jsx">
-import { useEffect, useRef, useState } from "react";
-
-function formatTime(seconds) {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-
-  return `${minutes}:${remainingSeconds
-    .toString()
-    .padStart(2, "0")}`;
-}
-
-function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSong}) {
-  const audioRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  const dragState = useRef(null);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  useEffect(() => {
-    if (!song) {
-      return;
-    }
-
-    audioRef.current.load();
-    audioRef.current
-      .play()
-      .then(() => {
-        setIsPlaying(true);
-      })
-      .catch(() => {
-        setIsPlaying(false);
-      });
-  }, [song]);
-
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play();
-      setIsPlaying(true);
-    }
-  };
-
-  if (!song) {
-    return (
-      <div className="player-status">
-        <p>No song selected.</p>
-      </div>
-    );
-  }
-
-  const progress = duration ? (currentTime / duration) * 100 : 0;
-
-  const handleSwipeStart = (event) => {
-  dragState.current = { startY: event.clientY };
-  setIsDragging(true);
-  event.currentTarget.setPointerCapture(event.pointerId);
-};
-
-const handleSwipeMove = (event) => {
-  if (!dragState.current) {
-    return;
-  }
-
-  const delta = dragState.current.startY - event.clientY;
-  setDragOffset(Math.max(0, delta));
-};
-
-const handleSwipeEnd = () => {
-  if (!dragState.current) {
-    return;
-  }
-
-  const shouldOpen = dragOffset > 60;
-
-  setIsDragging(false);
-  setDragOffset(0);
-  dragState.current = null;
-
-  if (shouldOpen) {
-    onOpenSheet();
-  }
-};
-
-  return (
-    <div className="now-playing"
-       onPointerDown={handleSwipeStart}
-       onPointerMove={handleSwipeMove}
-       onPointerUp={handleSwipeEnd}
-       onPointerCancel={handleSwipeEnd}
-       style={isDragging ? { transform: `translateY(-${dragOffset}px)` } : undefined}>
-
-      <div className="now-playing-header">
-        <span className="header-spacer" />
-        <h1>Now Playing</h1>
-        <span className="header-spacer" />
-      </div>
-
-      <div className="now-playing-art">
-        <img src={song.coverImage} alt={song.title} />
-      </div>
-
-      <div className="now-playing-meta">
-        <h2>{song.title}</h2>
-        {song.artist && <p>{song.artist}</p>}
-      </div>
-
-      <audio
-        ref={audioRef}
-        src={song.audioUrl}
-        onTimeUpdate={(event) => setCurrentTime(event.target.currentTime)}
-        onLoadedMetadata={(event) => setDuration(event.target.duration)}
-        onEnded={onNext}
-      />
-
-      <div className="now-playing-progress">
-        <input
-          className="seek"
-          style={{ "--progress": `${progress}%` }}
-          type="range"
-          min="0"
-          max={duration}
-          value={currentTime}
-          onChange={(event) => {
-            audioRef.current.currentTime = event.target.value;
-          }}
-        />
-
-        <div className="now-playing-time">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
-
-      <div className="now-playing-controls">
-        <button className="icon-button ghost" onClick={onRandom} aria-label="Shuffle">
-          <ShuffleIcon />
-        </button>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
-          <button className="icon-button secondary" onClick={onPrevious} aria-label="Previous">
-            <PreviousIcon />
-          </button>
-
-          <button
-            className="icon-button primary"
-            onClick={handlePlayPause}
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? <PauseIcon /> : <PlayIcon />}
-          </button>
-
-          <button className="icon-button secondary" onClick={onNext} aria-label="Next">
-            <NextIcon />
-          </button>
-        </div>
-
-        <button className="icon-button ghost" onClick={onAddSong} aria-label="Add">
-          <PlusIcon />
-        </button>
-      </div>
-
-      <button className="swipe-hint" onClick={onOpenSheet} aria-label="Show songs">
-        <ChevronUpIcon />
-      </button>
-    </div>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-  );
-}
-
-function PauseIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-      <rect x="6" y="5" width="4" height="14" />
-      <rect x="14" y="5" width="4" height="14" />
-    </svg>
-  );
-}
-
-function NextIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M6 5v14l9-7z" />
-      <rect x="16" y="5" width="2.5" height="14" />
-    </svg>
-  );
-}
-
-function PreviousIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18 5v14l-9-7z" />
-      <rect x="5.5" y="5" width="2.5" height="14" />
-    </svg>
-  );
-}
-
-function ShuffleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 3h5v5" />
-      <path d="M4 20L21 3" />
-      <path d="M21 16v5h-5" />
-      <path d="M15 15l6 6" />
-      <path d="M4 4l5 5" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
-function ChevronUpIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 15l6-6 6 6" />
-    </svg>
-  );
-}
-
-export default MusicPlayer;
 </file>
 
 <file path="client/src/components/SongList.jsx">
@@ -1443,11 +1863,459 @@ function PlusIcon() {
 export default SongList;
 </file>
 
+<file path="server/routes/songRoutes.js">
+import express from "express";
+import upload from "../middleware/upload.js";
+import authMiddleware from "../middleware/authMiddleware.js";
+import adminMiddleware from "../middleware/adminMiddleware.js";
+
+import {
+  getSongs,
+  getSong,
+  createSong,
+  updateSong,
+  deleteSong,
+} from "../controllers/songController.js";
+
+const router = express.Router();
+
+router.get("/", getSongs);
+
+router.get("/:id", getSong);
+
+router.post("/", authMiddleware, upload.single("audio"), createSong);
+
+router.put("/:id", updateSong);
+
+router.delete("/:id", authMiddleware, adminMiddleware, deleteSong);
+
+ export default router;
+</file>
+
+<file path="server/package.json">
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --env-file=.env server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "cloudinary": "^2.11.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "google-auth-library": "^11.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.5",
+    "multer": "^2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
+</file>
+
+<file path="server/server.js">
+import express from "express";
+import cors from "cors";
+
+
+
+import connectDB from "./config/db.js";
+import songRoutes from "./routes/songRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import likeRoutes from "./routes/likeRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+
+
+
+
+
+const app= express();
+
+
+app.use(cors());
+app.use(express.json());
+app.use("/api/likes", likeRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/users", userRoutes);
+
+
+app.get("/",(req,res)=>{
+     res.status(200).json({
+         message:"music player  api is  running"
+     });
+});
+
+app.use("/api/songs", songRoutes);
+
+app.use("/api/auth", authRoutes);//here
+
+const PORT = process.env.PORT||5000;
+
+const startServer =async ()=>{
+    await connectDB();
+
+    app.listen(PORT,()=>{
+     console.log(`server running  on port ${PORT}`);
+});
+}
+
+startServer();
+</file>
+
+<file path="client/src/components/MusicPlayer.jsx">
+import { useEffect, useRef, useState } from "react";
+import Comments from "./Comments";
+
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+
+  return `${minutes}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSong}) {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const dragState = useRef(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    if (!song) {
+      return;
+    }
+
+    audioRef.current.load();
+    audioRef.current
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(() => {
+        setIsPlaying(false);
+      });
+  }, [song]);
+
+   useEffect(() => {
+    const checkLikeStatus = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token || !song) {
+        setLiked(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to get like status");
+        }
+
+        setLiked(data.liked);
+      } catch (error) {
+        console.error("Failed to get like status:", error);
+        setLiked(false);
+      }
+    };
+
+    checkLikeStatus();
+  }, [song]);
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
+  if (!song) {
+    return (
+      <div className="player-status">
+        <p>No song selected.</p>
+      </div>
+    );
+  }
+
+ const handleShare = async () => {
+  const shareUrl = `${window.location.origin}/?song=${song._id}`;
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+
+    
+  } catch (error) {
+    console.error("Copy link failed:", error);
+    alert("Could not copy the song link.");
+  }
+};
+
+  const progress = duration ? (currentTime / duration) * 100 : 0;
+
+  const handleSwipeStart = (event) => {
+  dragState.current = { startY: event.clientY };
+  setIsDragging(true);
+  event.currentTarget.setPointerCapture(event.pointerId);
+};
+
+const handleSwipeMove = (event) => {
+  if (!dragState.current) {
+    return;
+  }
+
+  const delta = dragState.current.startY - event.clientY;
+  setDragOffset(Math.max(0, delta));
+};
+
+const handleSwipeEnd = () => {
+  if (!dragState.current) {
+    return;
+  }
+
+  const shouldOpen = dragOffset > 60;
+
+  setIsDragging(false);
+  setDragOffset(0);
+  dragState.current = null;
+
+  if (shouldOpen) {
+    onOpenSheet();
+  }
+};
+
+const handleLike = async () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Please login to like songs.");
+    return;
+  }
+
+  try {
+    const method = liked ? "DELETE" : "POST";
+     
+    console.log(
+      "LIKE URL:",
+      `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`
+    );
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`,
+      {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Like action failed");
+    }
+
+    setLiked(!liked);
+  } catch (error) {
+    console.error("Like action failed:", error);
+  }
+};
+
+  return (
+    <div className="now-playing"
+       onPointerDown={handleSwipeStart}
+       onPointerMove={handleSwipeMove}
+       onPointerUp={handleSwipeEnd}
+       onPointerCancel={handleSwipeEnd}
+       style={isDragging ? { transform: `translateY(-${dragOffset}px)` } : undefined}>
+
+      <div className="now-playing-header">
+        <span className="header-spacer" />
+        <h1>Now Playing</h1>
+        <span className="header-spacer" />
+      </div>
+
+      <div className="now-playing-art">
+        <img src={song.coverImage} alt={song.title} />
+      </div>
+
+      <div className="now-playing-meta">
+        <h2>{song.title}</h2>
+        {song.artist && <p>{song.artist}</p>}
+
+        <button className="upload-trigger" onClick={handleShare}>
+             Share
+        </button>
+      </div>
+
+      <audio
+        ref={audioRef}
+        src={song.audioUrl}
+        onTimeUpdate={(event) => setCurrentTime(event.target.currentTime)}
+        onLoadedMetadata={(event) => setDuration(event.target.duration)}
+        onEnded={onNext}
+      />
+
+      <div className="now-playing-progress">
+        <input
+          className="seek"
+          style={{ "--progress": `${progress}%` }}
+          type="range"
+          min="0"
+          max={duration}
+          value={currentTime}
+          onChange={(event) => {
+            audioRef.current.currentTime = event.target.value;
+          }}
+        />
+
+        <div className="now-playing-time">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      <div className="now-playing-controls">
+        <Comments song={song} />
+        
+        <button className="icon-button ghost" onClick={onRandom} aria-label="Shuffle">
+          <ShuffleIcon />
+        </button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+          <button className="icon-button secondary" onClick={onPrevious} aria-label="Previous">
+            <PreviousIcon />
+          </button>
+
+          <button
+            className="icon-button primary"
+            onClick={handlePlayPause}
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? <PauseIcon /> : <PlayIcon />}
+          </button>
+
+          <button className="icon-button secondary" onClick={onNext} aria-label="Next">
+            <NextIcon />
+          </button>
+        </div>
+
+        <button className="icon-button ghost" onClick={onAddSong} aria-label="Add">
+          <PlusIcon />
+        </button>
+
+        <button onClick={handleLike}>
+          {liked ? "❤️" : "♡ "}
+        </button>
+      </div>
+
+      <button className="swipe-hint" onClick={onOpenSheet} aria-label="Show songs">
+        <ChevronUpIcon />
+      </button>
+    </div>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="5" width="4" height="14" />
+      <rect x="14" y="5" width="4" height="14" />
+    </svg>
+  );
+}
+
+function NextIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M6 5v14l9-7z" />
+      <rect x="16" y="5" width="2.5" height="14" />
+    </svg>
+  );
+}
+
+function PreviousIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18 5v14l-9-7z" />
+      <rect x="5.5" y="5" width="2.5" height="14" />
+    </svg>
+  );
+}
+
+function ShuffleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 3h5v5" />
+      <path d="M4 20L21 3" />
+      <path d="M21 16v5h-5" />
+      <path d="M15 15l6 6" />
+      <path d="M4 4l5 5" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function ChevronUpIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 15l6-6 6 6" />
+    </svg>
+  );
+}
+
+export default MusicPlayer;
+</file>
+
 <file path="client/src/App.jsx">
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import SongList from "./components/SongList";
 import MusicPlayer from "./components/MusicPlayer";
+import GoogleLoginButton from "./components/GoogleLoginButton.jsx";
+import Profile from "./components/Profile.jsx";
 
 function App() {
   const [songs, setSongs] = useState([]);
@@ -1472,7 +2340,14 @@ function App() {
         setSongs(data);
 
         if (data.length > 0) {
-          setCurrentSong(data[0]);
+
+           const sharedSongId = new URLSearchParams(window.location.search).get("song");
+
+           const sharedSong = data.find(
+           (song) => song._id === sharedSongId
+            );
+
+          setCurrentSong(sharedSong ||data[0]);
         }
       })
       .catch(() => {
@@ -1587,10 +2462,15 @@ function App() {
 
           console.log("Cover image:", formData.get("coverImage"));
 
-          fetch(`${import.meta.env.VITE_API_URL}/api/songs`, {
-            method: "POST",
-            body: formData,
-          })
+         const token = localStorage.getItem("token");
+
+fetch(`${import.meta.env.VITE_API_URL}/api/songs`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: formData,
+})
             .then((response) => {
               if (!response.ok) {
                 throw new Error("Failed to upload song");
@@ -1616,6 +2496,8 @@ function App() {
   };
 
   return (
+
+   
     <div className={`player-app ${isSheetOpen ? "sheet-open" : ""}`}>
       <input
         ref={fileInputRef}
@@ -1624,6 +2506,9 @@ function App() {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
+       
+       <GoogleLoginButton />
+        <Profile />
 
       {songs.length === 0 ? (
         <div className="player-status">
@@ -1657,6 +2542,7 @@ function App() {
         </>
       )}
     </div>
+  
   );
 }
 

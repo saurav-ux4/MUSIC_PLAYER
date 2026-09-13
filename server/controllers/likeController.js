@@ -57,7 +57,6 @@ const unlikeSong = async (req, res) => {
   }
 };
 
-
 const getLikeStatus = async (req, res) => {
   try {
     const { songId } = req.params;
@@ -79,8 +78,29 @@ const getLikeStatus = async (req, res) => {
   }
 };
 
+const getMyLikedSongs = async (req, res) => {
+  try {
+    const likes = await Like.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .populate("song");
+
+    const songs = likes
+      .filter((like) => like.song)
+      .map((like) => like.song);
+
+    res.status(200).json(songs);
+  } catch (error) {
+    console.error("Get liked songs error:", error);
+
+    res.status(500).json({
+      message: "Failed to get liked songs",
+    });
+  }
+};
+
 export {
   likeSong,
   unlikeSong,
   getLikeStatus,
+  getMyLikedSongs,
 };
