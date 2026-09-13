@@ -14,7 +14,7 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-
+  const [liked, setLiked] = useState(false);
   const dragState = useRef(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -33,6 +33,41 @@ function MusicPlayer({ song, onNext, onPrevious, onRandom, onOpenSheet ,onAddSon
       .catch(() => {
         setIsPlaying(false);
       });
+  }, [song]);
+
+   useEffect(() => {
+    const checkLikeStatus = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token || !song) {
+        setLiked(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to get like status");
+        }
+
+        setLiked(data.liked);
+      } catch (error) {
+        console.error("Failed to get like status:", error);
+        setLiked(false);
+      }
+    };
+
+    checkLikeStatus();
   }, [song]);
 
   const handlePlayPause = () => {
@@ -96,6 +131,44 @@ const handleSwipeEnd = () => {
 
   if (shouldOpen) {
     onOpenSheet();
+  }
+};
+
+const handleLike = async () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    alert("Please login to like songs.");
+    return;
+  }
+
+  try {
+    const method = liked ? "DELETE" : "POST";
+     
+    console.log(
+      "LIKE URL:",
+      `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`
+    );
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/likes/${song._id}`,
+      {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Like action failed");
+    }
+
+    setLiked(!liked);
+  } catch (error) {
+    console.error("Like action failed:", error);
   }
 };
 
@@ -178,6 +251,10 @@ const handleSwipeEnd = () => {
 
         <button className="icon-button ghost" onClick={onAddSong} aria-label="Add">
           <PlusIcon />
+        </button>
+
+        <button onClick={handleLike}>
+          {liked ? "❤️" : "♡ "}
         </button>
       </div>
 

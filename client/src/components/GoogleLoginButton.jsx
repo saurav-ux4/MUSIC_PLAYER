@@ -15,7 +15,7 @@ function GoogleLoginButton() {
 
       const data = await response.json();
 
-      console.log("Google login response:", data);
+    
       if (data.token) {
        localStorage.setItem("token", data.token);
 }

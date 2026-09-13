@@ -7,6 +7,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import songRoutes from "./routes/songRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import likeRoutes from "./routes/likeRoutes.js";
 
 
 
@@ -17,6 +18,7 @@ const app= express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/likes", likeRoutes);
 
 
 app.get("/",(req,res)=>{
